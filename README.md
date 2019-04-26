@@ -23,6 +23,8 @@
 
 ## Fine tuning with new data
 
+![Fine tuning force estimation](config/fine\_tuning.gif)
+
 If the force estimation from the network is not sufficiently accurate for your biotac sensor, you can collect new data and augment the training dataset with your new data. You will need a force torque sensor to collect new data. We provide a 3d printable biotac mount in this package as bt\_mount.stl, which is compatible with most wrist mountable F/T sensors. Print the mount, attach the mount to the biotac and also to the F/T sensor.
 
 -   You need this repo [ll4ma\_robots\_description](https://bitbucket.org/robot-learning/ll4ma_robots_description) in your catkin workspace to perform data collection.
@@ -30,7 +32,7 @@ If the force estimation from the network is not sufficiently accurate for your b
 -   Visualize the force in rviz to ensure the frame transformation is correct.
 -   Run python ft\_record\_server.py
 -   Run ft\_collection.py and interact with the biotac to get force readings.
--   Run get\_processed\_training\_data.py to get process data.
+-   Run get\_processed\_training\_data.py to get processed data.
 -   Open train\_force\_network.py and add the file to the list of files used for training the network.
 -   Run the script train\_force\_network.py to train a new model
 -   Change the model folder in force\_inference.py to run the new model.

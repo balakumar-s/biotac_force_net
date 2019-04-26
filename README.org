@@ -18,6 +18,8 @@
 - Download data from [[https://drive.google.com/drive/folders/1jt4qU8XNqv8sWO23RZv2nOndkjUVpLgz?usp=sharing][data_url]] and put in tf_dataset/
 
 ** Fine tuning with new data
+![Fine tuning force estimation](config/fine_tuning.gif)
+
 If the force estimation from the network is not sufficiently accurate for your biotac sensor, you can collect new data and augment the training dataset with your new data. You will need a force torque sensor to collect new data. We provide a 3d printable biotac mount in this package as bt_mount.stl, which is compatible with  most wrist mountable F/T sensors. Print the mount, attach the mount to the biotac and also to the F/T sensor. 
 
 
