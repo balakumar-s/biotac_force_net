@@ -42,7 +42,7 @@ If the force estimation from the network is not sufficiently accurate for your b
 
 This code was developed as part of the following publication. Please cite the below publication, if you use our source code.
 
-*Sundaralingam, B., Handa, A., Boots, B., Hermans, T., Birchfield, S., Ratliff, N. and Fox, D., 2019. Robust learning of tactile force estimation through robot interaction. In 2019 IEEE International Conference on Robotics and Automation (ICRA).*
+*Sundaralingam, B., Lambert, A., Handa, A., Boots, B., Hermans, T., Birchfield, S., Ratliff, N. and Fox, D., 2019. Robust learning of tactile force estimation through robot interaction. In 2019 IEEE International Conference on Robotics and Automation (ICRA).*
 
 ```
 @InProceedings{bala-icra2019,
