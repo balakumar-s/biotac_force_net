@@ -1,0 +1,55 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+#!*.so 		#override exclusion in ~/.gitignore_global
+*.dylib  
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# backups
+*~
+
+# built stuff
+*build/
+*bin/
+
+# Python
+*.pyc
+
+# closed-source
+#*underDevelopment/
+#*old/
+*closed-source/
+\#*\#
+
+*~
+[#]*[#]
+.\#*
+
+# documentation (maybe uncomment this later)
+*html/
+*latex/
+*.dox
+*.html
+*.tex
+
+# SVN
+*.svn/
+
+# rosbag files
+*.bag
+
+# CMA data files- Uncomment if required
+#*.dat
+
+*tf_session_logs/
+
+*temp_dataset/
+
+*tf_dataset/

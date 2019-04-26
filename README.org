@@ -1,0 +1,48 @@
+#+OPTIONS: toc:nil
+#+OPTIONS: _:nil
+
+* Biotac Force Estimation using Neural Networks
+
+** How to run force estimation
+- clone [[https://bitbucket.org/robot-learning/biotac_sensors][biotac_sensors]] into your catkin workspace and follow instructions to compile it.
+- roslaunch biotac_sensors biotac_contact_sensing.launch
+- roscd bt_force_net/scripts
+- python force_inference.py
+
+** Dependencies
+- [[https://bitbucket.org/robot-learning/biotac_sensors][biotac_sensors]]
+- tensorflow
+- tfquaternion (pip install)
+
+** Dataset for retraining
+- Download data from [[https://drive.google.com/drive/folders/1jt4qU8XNqv8sWO23RZv2nOndkjUVpLgz?usp=sharing][data_url]] and put in tf_dataset/
+
+** Fine tuning with new data
+If the force estimation from the network is not sufficiently accurate for your biotac sensor, you can collect new data and augment the training dataset with your new data. You will need a force torque sensor to collect new data. We provide a 3d printable biotac mount in this package as bt_mount.stl, which is compatible with  most wrist mountable F/T sensors. Print the mount, attach the mount to the biotac and also to the F/T sensor. 
+
+
+- You need this repo [[https://bitbucket.org/robot-learning/ll4ma_robots_description][ll4ma_robots_description]] in your catkin workspace to perform data collection.
+- Run roslaunch biotac_force_net ft_bt_transform.launch
+- Visualize the force in rviz to ensure the frame transformation is correct.
+- Run python ft_record_server.py
+- Run ft_collection.py and interact with the biotac to get force readings.
+- Run get_processed_training_data.py to get processed data.
+- Open train_force_network.py and add the file to the list of files used for training the network.
+- Run the script train_force_network.py to train a new model
+- Change the model folder in force_inference.py to run the new model.
+
+** Citing
+
+This code was developed as part of the following publication. Please cite the below publication, if you use our source code.
+
+/Sundaralingam, B., Handa, A., Boots, B., Hermans, T., Birchfield, S., Ratliff, N. and Fox, D., 2019. Robust learning of tactile force estimation through robot interaction. In 2019 IEEE International Conference on Robotics and Automation (ICRA)./
+
+#+BEGIN_SRC 
+@InProceedings{bala-icra2019,
+    AUTHOR    = {Balakumar Sundaralingam AND Alex Lambert and Ankur Handa and Byron Boots and Tucker Hermans and Stan Birchfield and Nathan Ratliff and Dieter Fox}, 
+    TITLE     = {Robust Learning of Tactile Force Estimation through Robot Interaction}, 
+    BOOKTITLE = {{IEEE International Conference on Robotics and Automation}}, 
+    YEAR      = 2019,
+    location={{Montreal,Canada}}
+    }
+#+END_SRC
