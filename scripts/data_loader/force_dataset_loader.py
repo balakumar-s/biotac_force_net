@@ -3,12 +3,13 @@ import pickle
 from random import shuffle
 from os import walk
 from biotac_pos import *
-
+from biotac_process import *
 class ForceDataReader(object):
     def __init__(self,pickle_file,VOXEL=False,LOAD_DATASET=True,LOAD_MULTIPLE=False):
         self.output_dim=3
         self.dataset=None
         self.epoch_counter=-1
+        self.bt_fns=BtFns()
         #self.val_epoch_counter=
         if(LOAD_DATASET and not LOAD_MULTIPLE):
             data=pickle.load(open(pickle_file,'rb'))
@@ -67,6 +68,7 @@ class ForceDataReader(object):
         x_b=np.digitize(cpt[0],self.edges[0])-1
         y_b=np.digitize(cpt[1],self.edges[1])-1
         z_b=np.digitize(cpt[2],self.edges[2])-1
+        #print self.edges[0]
         v_mat[x_b,y_b,z_b]=1
         return v_mat
     def get_voxel_electrode(self,electrode_data):
@@ -80,7 +82,7 @@ class ForceDataReader(object):
     '''
     def get_test_random_batch(self,batch_size):
         inp_bt_elect=[]
-        inp_bt_pac=[]
+         inp_bt_pac=[]
         inp_bt_pdc=[]
         inp_bt_tdc=[]
         inp_bt_tac=[]
@@ -152,13 +154,16 @@ class ForceDataReader(object):
             #print '***index=',f_idx
             inp_bt_elect.append(np.ravel(self.dataset[f_idx]['tare_bt_electrode']))
             inp_el_voxel.append(self.get_voxel_electrode(self.dataset[f_idx]['tare_bt_electrode']))
-            inp_cpt_voxel.append(self.get_voxel_cpt(self.dataset[f_idx]['b_contact']))
             inp_bt_pac.append(np.ravel(self.dataset[f_idx]['tare_bt_pac']))
             inp_bt_pdc.append(np.ravel(self.dataset[f_idx]['tare_bt_pdc']))
             inp_bt_tdc.append(np.ravel(self.dataset[f_idx]['tare_bt_tdc']))
             inp_bt_tac.append(np.ravel(self.dataset[f_idx]['tare_bt_tac']))
             inp_bt_pose.append(np.ravel(self.dataset[f_idx]['bt_pose']))
-            inp_cpt.append(np.ravel(self.dataset[f_idx]['b_contact']))
+            
+            inp_cpt.append(np.ravel(self.bt_fns.get_contact_pt(self.dataset[f_idx]['tare_bt_electrode'])))
+
+            inp_cpt_voxel.append(self.get_voxel_cpt(self.bt_fns.get_contact_pt(self.dataset[f_idx]['tare_bt_electrode'])))
+
             inp_sn.append(np.ravel(self.dataset[f_idx]['bt_surface_normal']))
             proj_flag.append(bool(self.dataset[f_idx]['projection']))
             
@@ -187,15 +192,22 @@ class ForceDataReader(object):
         for f_idx in range(b_start,b_stop):
             inp_bt_elect.append(np.ravel(self.dataset[f_idx]['tare_bt_electrode']))
             inp_voxel.append(self.get_voxel_electrode(self.dataset[f_idx]['tare_bt_electrode']))
-            inp_cpt_voxel.append(self.get_voxel_cpt(self.dataset[f_idx]['b_contact']))
+            
 
             inp_bt_pac.append(np.ravel(self.dataset[f_idx]['tare_bt_pac']))
             inp_bt_pdc.append(np.ravel(self.dataset[f_idx]['tare_bt_pdc']))
             inp_bt_tdc.append(np.ravel(self.dataset[f_idx]['tare_bt_tdc']))
             inp_bt_tac.append(np.ravel(self.dataset[f_idx]['tare_bt_tac']))
-            #inp_bt_pose.append(np.ravel(self.dataset[f_idx]['bt_pose']))
+
+
             inp_bt_pose.append(np.array([0.0,0.0,0.0,0.0,0.0,0.0,1.0]))
-            inp_cpt.append(np.ravel(self.dataset[f_idx]['b_contact']))
+
+            inp_cpt.append( np.ravel(self.bt_fns.get_contact_pt(self.dataset[f_idx]['tare_bt_electrode'])))
+
+            inp_cpt_voxel.append(
+                self.get_voxel_cpt(self.bt_fns.get_contact_pt(self.dataset[f_idx]['tare_bt_electrode'])))
+
+            
             proj_flag.append(bool(0))
 
             inp_sn.append(np.ravel(self.dataset[f_idx]['bt_surface_normal']))
@@ -222,18 +234,24 @@ class ForceDataReader(object):
         for f_idx in range(len(self.dataset)):
             inp_bt_elect.append(np.ravel(self.dataset[f_idx]['tare_bt_electrode']))
             inp_voxel.append(self.get_voxel_electrode(self.dataset[f_idx]['tare_bt_electrode']))
-            inp_cpt_voxel.append(self.get_voxel_cpt(self.dataset[f_idx]['b_contact']))
+            #inp_cpt_voxel.append(self.get_voxel_cpt(self.dataset[f_idx]['b_contact']))
 
             inp_bt_pac.append(np.ravel(self.dataset[f_idx]['tare_bt_pac']))
             inp_bt_pdc.append(np.ravel(self.dataset[f_idx]['tare_bt_pdc']))
             inp_bt_tdc.append(np.ravel(self.dataset[f_idx]['tare_bt_tdc']))
             inp_bt_tac.append(np.ravel(self.dataset[f_idx]['tare_bt_tac']))
             inp_bt_pose.append(np.ravel(self.dataset[f_idx]['bt_pose']))
-            inp_cpt.append(np.ravel(self.dataset[f_idx]['b_contact']))
+            #inp_cpt.append(np.ravel(self.dataset[f_idx]['b_contact']))
             proj_flag.append(bool(self.dataset[f_idx]['projection']))
 
             inp_sn.append(np.ravel(self.dataset[f_idx]['bt_surface_normal']))
-            
+
+            inp_cpt.append(
+                            np.ravel(self.bt_fns.get_contact_pt(self.dataset[f_idx]['tare_bt_electrode'])))
+
+            inp_cpt_voxel.append(
+                self.get_voxel_cpt(self.bt_fns.get_contact_pt(self.dataset[f_idx]['tare_bt_electrode'])))
+
 
             out_force.append(np.ravel(self.dataset[f_idx]['sim_force']))
         return inp_voxel,inp_cpt_voxel, np.matrix(inp_bt_elect), np.matrix(inp_bt_pac), np.matrix(inp_bt_pdc), np.matrix(inp_bt_tdc), np.matrix(inp_bt_tac), np.matrix(inp_bt_pose), np.matrix(inp_cpt), np.matrix(inp_sn),proj_flag, np.matrix(out_force)

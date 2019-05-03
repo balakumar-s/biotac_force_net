@@ -13,7 +13,7 @@ class BtFns(object):
         normal_vec=-1.0*np.ravel(normal)/(np.linalg.norm(normal)+1e-8)
         return normal_vec
 
-    def get_contact_pt(self,e_data):
+    def get_contact_pt(self,e_data,meters=True):
         electrode_data=e_data**2 # squared as per paper
         normalized_data=electrode_data/(np.sum(electrode_data)+1e-8)
         contact_pt=np.matrix(normalized_data)*self.e_pos #[1x19]* [19*3]= [1x3] centroid
@@ -34,9 +34,10 @@ class BtFns(object):
                 contact_pt[j]=contact_pt[j]*(r/np.sqrt(v_norm))
                 j+=1
                 
-        
-        return np.ravel(contact_pt)/1000.0
-
+        if(meters):
+            return np.ravel(contact_pt)/1000.0
+        else:
+            return np.ravel(contact_pt)#/1000.0
     def get_surface_normal(self,cpt):
         # check if contact point is in the cylinder or sphere:
         surface_normal=np.zeros(3)

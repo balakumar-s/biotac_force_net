@@ -1,5 +1,5 @@
 import numpy as np
-def get_elect_pos():
+def get_elect_pos(): #in mm
     elect_position=np.zeros((20,4))
     elect_position[1][1] = 0.993;
     elect_position[1][2] = -4.855;
@@ -58,7 +58,7 @@ def get_elect_pos():
     elect_position[19][1] = -13.600;
     elect_position[19][2] = 0.000;
     elect_position[19][3] = -5.080;
-    return elect_position[1:20,1:4]
+    return elect_position[1:20,1:4]/1000.0 # convert to meters
 
 def get_normal_vec():
     elect_normal=np.zeros((20,4))

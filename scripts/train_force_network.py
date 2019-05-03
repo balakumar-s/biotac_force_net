@@ -42,6 +42,10 @@ def mixed_dataset(s_list,model_name):
     print 'train', len(train_contact_data.dataset)
     print 'valid', len(valid_contact_data.dataset)
     print 'test', len(test_contact_data.dataset)
+
+    #print 'Visualizing voxel cpt data'
+
+    #print 
     print ('loading tensorflow...')
     # tf config:
     config=tf.ConfigProto(log_device_placement=False)
