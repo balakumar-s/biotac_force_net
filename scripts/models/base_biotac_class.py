@@ -150,10 +150,16 @@ class SensorRegressionNet(object):
         net_contact=None
         return cost, net_contact
 
-    # This returns the reduce mean cost and also the confution matrix.
+    # overload this function to return the cost you use for training
+    def cost_train(self):
+        print("Error No training cost defined!!")
+        return None
+    # This returns the reduce mean cost and also the confusion matrix.
     def accuracy(self):
         with tf.name_scope('Validation'):
-            cost=tf.reduce_mean(tf.square(self.output_vector-self.prediction))
+            #cost=tf.reduce_mean(tf.square(self.output_vector-self.prediction))
+            cost=self.cost_train()#self.output_vector,self.prediction)
+            #tf.reduce_mean(tf.abs(self.output_vector-self.prediction))
         
         return cost
     # default training function.

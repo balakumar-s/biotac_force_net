@@ -8,6 +8,58 @@ class ScaledForceNet(SensorRegressionNet):
         SensorRegressionNet.__init__(self,sess,t_steps,batch_size)
     def get_size(self,tensor):
         print tensor.get_shape().as_list()
+        
+    def cost_train(self):
+        
+        gt_force=self.output_vector
+        
+        
+        gt_unit=gt_force/tf.sqrt(tf.reduce_sum(tf.square(gt_force),axis=1,keepdims=True)+1e-8)
+
+        z_vec=tf.Variable([0.0,0.0,1.0])
+        	        
+        z_tensor=tf.ones(tf.shape(gt_force)) * z_vec
+        
+        
+        exp_tensor=tf.ones(tf.shape(gt_force)[0]) * 2.0
+        weight=tf.pow( exp_tensor , (1.0-(tf.acos(tf.reduce_sum(tf.multiply(self.input_sn,gt_unit),axis=1))/math.pi))*10.0)
+        magnitude_scale=tf.norm(self.output_vector,axis=1)
+        # force cost in 3d:
+        
+        
+        pred_force=self.prediction
+
+        
+
+
+
+        #Force cost in 2d:
+
+        # Projecting the ground truth force vector to the world frame:
+        gt_force_mat=tf.expand_dims(gt_force,-1)
+        quat=self.input_bt_pose[:,3:]
+        inp_quat=tf.transpose(tf.convert_to_tensor([quat[:,3],quat[:,0],quat[:,1],quat[:,2]]))
+        w_out_force = tf.matmul(tfq.Quaternion(inp_quat).as_rotation_matrix(),gt_force_mat)
+        
+        net_contact_mat=tf.expand_dims(pred_force,-1)
+        w_net_contact = tf.matmul(tfq.Quaternion(inp_quat).as_rotation_matrix(),net_contact_mat)
+
+        proj_gt_force=tf.squeeze(w_out_force[:,0:2,:],axis=2)
+        proj_pred_force=tf.squeeze(w_net_contact[:,0:2,:],axis=2)
+
+        
+        
+        
+
+        
+        cost_2d=tf.reduce_mean(tf.square(tf.subtract(proj_gt_force,proj_pred_force)),axis=1)
+        cost_3d=tf.reduce_mean(tf.square(tf.subtract(gt_force,pred_force)),axis=1)
+
+        cosine_distance=tf.divide(tf.multiply( weight,tf.where(self.proj_flag,cost_2d,cost_3d)),magnitude_scale)
+        
+        cost=tf.sqrt(tf.reduce_mean(cosine_distance))
+        return cost
+
     def build_network(self):
         '''
         Use name scope for layers for good visualization in tensorboard
