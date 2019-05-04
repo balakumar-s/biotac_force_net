@@ -155,11 +155,11 @@ def mixed_dataset(s_list,model_name):
             print ('Test Set Accuracy: ',1.0-acc)
 
 if __name__=='__main__':
-    s_list=['icra19/planar_pushing','icra19/rigid_ft','icra19/ball_ft','ll4malab']
+    s_list=['icra19/planar_pushing','icra19/rigid_ft','icra19/ball_ft']#,'ll4malab']
     # create new model name:
     now = datetime.datetime.now()
     
-    model_name='n_force_'+str(now.year)+'_'+str(now.month)+'_'+str(now.day)
+    model_name='abs1_force_'+str(now.year)+'_'+str(now.month)+'_'+str(now.day)
     print '*******Training new model with model name:', model_name
     mixed_dataset(s_list,model_name)
 

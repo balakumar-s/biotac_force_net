@@ -170,7 +170,7 @@ class biotacSensor(object):
         return self.elect,self.pac,self.pdc,self.tdc,self.tac
 if __name__=='__main__':
 
-    suffix='icra19'
+    suffix='force_2019_5_4'
    
     checkpoint_dir = '../tf_models/'+suffix+'/momentum/checkpoints/'
 
@@ -191,12 +191,13 @@ if __name__=='__main__':
     bt_sense=biotacSensor(False)
     out_sig=np.zeros((3,1))
     in_elect,in_pac,in_pdc,in_tdc,in_tac,in_bt_pose,in_cpt,in_sn,in_flags=bt_sense.get_data()
-    bt_force_pub=rospy.Publisher('TacNet/bt_force',BioTacForce,queue_size=1)
+    bt_force_pub=rospy.Publisher('TacNet1/bt_force',BioTacForce,queue_size=1)
     force_pubs=[]
     for i in range(len(finger_frames)):
-        force_pubs.append(rospy.Publisher('TacNet/'+finger_frames[i]+'/force',WrenchStamped,queue_size=1))
+        force_pubs.append(rospy.Publisher('TacNet1/'+finger_frames[i]+'/force',WrenchStamped,queue_size=1))
     while (not rospy.is_shutdown()):
         if(bt_sense.got_biotac_data):
+            #print 'bt data'
             msg=Int16()
             #in_elect,in_pac,in_pdc,in_tdc,in_tac=bt_sense.get_tstep_data(0)
             in_elect,in_pac,in_pdc,in_tdc,in_tac,in_bt_pose,in_cpt,in_sn,in_flags=bt_sense.get_data()
