@@ -29,8 +29,8 @@ class SensorPredictorNet(object):
 
         # The optimizer used for training is initialized inside a namescope
         with tf.name_scope('train'):
-            optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
-            #optimizer = tf.train.MomentumOptimizer(learning_rate=self.lr,momentum=0.98)
+            #optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
+            optimizer = tf.train.MomentumOptimizer(learning_rate=self.lr,momentum=0.98)
 
             self.train_op = optimizer.minimize(self.cost)
 
