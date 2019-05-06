@@ -64,8 +64,8 @@ def mixed_dataset(s_list,model_name):
     if not path.exists(checkpoint_dir):
         makedirs(checkpoint_dir)
 
-        # hyper parameters:
-    validate_epoch=1
+    # hyper parameters:
+    validate_epoch=10
     learning_rate=1e-4
     lr_epoch=5*len(train_contact_data.dataset)/batch_size
     epoch_iter=len(train_contact_data.dataset)/batch_size
@@ -142,7 +142,7 @@ def mixed_dataset(s_list,model_name):
             iteration+=1
             if(iteration>save_iter and (min_acc<acc_thresh or iteration>max_iter)):
                 TRAINING=False
-                print("Training completed with accuracy: ",min_acc) 
+                print("Training completed with loss: ",min_acc) 
         # Once training is complete, get the accuraccy of the best model:
         if TEST:
             # load best model:
@@ -152,7 +152,7 @@ def mixed_dataset(s_list,model_name):
             test_cpt_vox=np.expand_dims(test_cpt_vox,axis=-1)
 
             acc,summ=dyn_trainer.get_accuracy(test_vox,test_cpt_vox,test_elect,test_pac,test_pdc,test_tdc,test_tac,test_bt_pose,test_cpt, test_sn,test_flag,test_force)
-            print ('Test Set Accuracy: ',acc)
+            print ('Test Set Loss: ',acc)
 
 if __name__=='__main__':
     s_list=['icra19/planar_pushing','icra19/rigid_ft','icra19/ball_ft']#,'ll4malab']
