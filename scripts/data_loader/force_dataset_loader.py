@@ -33,6 +33,7 @@ class ForceDataReader(object):
             ep=get_elect_pos()
             #print (ep)
             self.H, self.edges = np.histogramdd(ep, bins =self.bin_dims)
+            #print self.edges
             elect_pos=ep
             x_b=np.digitize(ep[:,0],self.edges[0])-1
             y_b=np.digitize(ep[:,1],self.edges[1])-1

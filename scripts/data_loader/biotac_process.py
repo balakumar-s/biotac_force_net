@@ -19,7 +19,7 @@ class BtFns(object):
         contact_pt=np.matrix(normalized_data)*self.e_pos #[1x19]* [19*3]= [1x3] centroid
         contact_pt=np.ravel(contact_pt)
         v_norm=0.0
-        r=5.5
+        r=5.5/1000.0
         if(contact_pt[0]>0.0):
             for j in range(3):
                 v_norm+=contact_pt[j]**2
@@ -33,11 +33,7 @@ class BtFns(object):
             while(j<3):
                 contact_pt[j]=contact_pt[j]*(r/np.sqrt(v_norm))
                 j+=1
-                
-        if(meters):
-            return np.ravel(contact_pt)/1000.0
-        else:
-            return np.ravel(contact_pt)#/1000.0
+        return np.ravel(contact_pt)
     def get_surface_normal(self,cpt):
         # check if contact point is in the cylinder or sphere:
         surface_normal=np.zeros(3)

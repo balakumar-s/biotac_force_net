@@ -88,6 +88,8 @@ class voxelViz(object):
 
     def get_voxel_cpt(self,bt_data):
         cpt=self.bt_fns.get_contact_pt(np.array(bt_data[self.bt_idx].electrode_data))
+        
+        #print cpt[0]
         #print cpt
         # voxelized cpt:
         cpt_vox=self.f_aux.get_voxel_cpt(cpt)
@@ -96,32 +98,34 @@ class voxelViz(object):
 
     def pub_voxel_el(self,voxel_mat):
         marker = Marker()
-        marker.header.frame_id = "/index_tip_origin"
+        marker.header.frame_id = "/index_biotac_origin"
         marker.type = marker.CUBE_LIST
         marker.action = marker.ADD
-        marker.scale.x = 0.05
-        marker.scale.y = 0.05
-        marker.scale.z = 0.05
+        marker.scale.x = 0.005
+        marker.scale.y = 0.005
+        marker.scale.z = 0.005
         #marker.color.a = 1.0
         marker.pose.orientation.w = 1.0
         
-        marker.pose.position.x = 0.0
-        marker.pose.position.y = 0.0
+        marker.pose.position.x = -0.1
+        marker.pose.position.y = 0.05
         marker.pose.position.z = 0.0
         
         for i in range(voxel_mat.shape[0]):
             for j in range(voxel_mat.shape[1]):
                 for k in range(voxel_mat.shape[2]):
                     cube=Point()
-                    cube.x=i*0.1#+0.1*j+0.1*k
-                    cube.y=j*0.1#+0.1*j+0.1*k
-                    cube.z=k*0.1#+0.1*j+0.1*k
+                    cube.x=i*0.01#+0.1*j+0.1*k
+                    cube.y=j*0.01#+0.1*j+0.1*k
+                    cube.z=k*0.01#+0.1*j+0.1*k
                     marker.points.append(cube)
-                    if abs(voxel_mat[i][j][k])<10:
-                        color=ColorRGBA(0,0.0,0.0,0.1)
-                        #print color
+                    if abs(voxel_mat[i][j][k])<0.01:
+                        color=ColorRGBA(0,0,0.0,0.05)
+                    elif voxel_mat[i][j][k]>0.0:
+                        color=ColorRGBA(0,0,voxel_mat[i][j][k]/4000.0,1.0)
+                        #print voxel_mat[i][j][k]
                     else:
-                        color=ColorRGBA(voxel_mat[i][j][k],0.0,0.0,0.8)
+                        color=ColorRGBA(voxel_mat[i][j][k]/4000.0,0.0,0.0,1.0)
                         
                     marker.colors.append(color)
 
@@ -134,32 +138,32 @@ class voxelViz(object):
         #    loop_rate.sleep()
     def pub_voxel_cpt(self,voxel_mat):
         marker = Marker()
-        marker.header.frame_id = "/index_tip_origin"
+        marker.header.frame_id = "/index_biotac_origin"
         marker.type = marker.CUBE_LIST
         marker.action = marker.ADD
-        marker.scale.x = 0.05
-        marker.scale.y = 0.05
-        marker.scale.z = 0.05
+        marker.scale.x = 0.005
+        marker.scale.y = 0.005
+        marker.scale.z = 0.005
         #marker.color.a = 1.0
         marker.pose.orientation.w = 1.0
         
-        marker.pose.position.x = 0.0
-        marker.pose.position.y = 0.0
+        marker.pose.position.x = -0.1
+        marker.pose.position.y = -0.20
         marker.pose.position.z = 0.0
         
         for i in range(voxel_mat.shape[0]):
             for j in range(voxel_mat.shape[1]):
                 for k in range(voxel_mat.shape[2]):
                     cube=Point()
-                    cube.x=i*0.1#+0.1*j+0.1*k
-                    cube.y=j*0.1#+0.1*j+0.1*k
-                    cube.z=k*0.1#+0.1*j+0.1*k
+                    cube.x=i*0.01#+0.1*j+0.1*k
+                    cube.y=j*0.01#+0.1*j+0.1*k
+                    cube.z=k*0.01#+0.1*j+0.1*k
                     marker.points.append(cube)
                     if abs(voxel_mat[i][j][k])<0.1:
-                        color=ColorRGBA(0,0.0,0.0,0.1)
+                        color=ColorRGBA(0,0.0,0.0,0.05)
                         #print color
                     else:
-                        color=ColorRGBA(0,0,voxel_mat[i][j][k],0.8)
+                        color=ColorRGBA(0,voxel_mat[i][j][k],0,1.0)
                         #print i,j,k
                         
                     marker.colors.append(color)
@@ -181,7 +185,7 @@ if __name__=='__main__':
     #raw_input('publish?')
     #v_el=vox_viz.get_voxel_el(bt_data)
     #vox_viz.get_voxel_marker(v_el)
-    loop_rate=rospy.Rate(100)
+    loop_rate=rospy.Rate(10)
     while not rospy.is_shutdown():
         bt_data=bt_sense.get_bt_data()
         v_el=vox_viz.get_voxel_el(bt_data)

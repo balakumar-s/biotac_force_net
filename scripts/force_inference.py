@@ -170,7 +170,7 @@ class biotacSensor(object):
         return self.elect,self.pac,self.pdc,self.tdc,self.tac
 if __name__=='__main__':
 
-    suffix='icra19'
+    suffix='force_2019_5_4'
    
     checkpoint_dir = '../tf_models/'+suffix+'/momentum/checkpoints/'
 

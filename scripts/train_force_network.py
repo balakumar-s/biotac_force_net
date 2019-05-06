@@ -152,14 +152,14 @@ def mixed_dataset(s_list,model_name):
             test_cpt_vox=np.expand_dims(test_cpt_vox,axis=-1)
 
             acc,summ=dyn_trainer.get_accuracy(test_vox,test_cpt_vox,test_elect,test_pac,test_pdc,test_tdc,test_tac,test_bt_pose,test_cpt, test_sn,test_flag,test_force)
-            print ('Test Set Accuracy: ',1.0-acc)
+            print ('Test Set Accuracy: ',acc)
 
 if __name__=='__main__':
     s_list=['icra19/planar_pushing','icra19/rigid_ft','icra19/ball_ft','ll4malab']
     # create new model name:
     now = datetime.datetime.now()
     
-    model_name='n_force_'+str(now.year)+'_'+str(now.month)+'_'+str(now.day)
+    model_name='force_'+str(now.year)+'_'+str(now.month)+'_'+str(now.day)
     print '*******Training new model with model name:', model_name
     mixed_dataset(s_list,model_name)
 
