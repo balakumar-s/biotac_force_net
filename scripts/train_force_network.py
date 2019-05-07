@@ -5,6 +5,7 @@ from models.ScaledForceProjLS import *
 import numpy as np
 from os import path, makedirs
 import datetime
+import scipy
 
 # small_batch_LS params:
 # RMS params
@@ -16,7 +17,22 @@ acc_thresh=1e-5 #5e-4
 import matplotlib as mpl
 import shutil
 
+
+def compute_error(pred_forces,gt_forces):
+    print len(pred_forces)
+    t_mag=np.abs(np.linalg.norm(gt_forces,axis=1)-np.linalg.norm(pred_forces,axis=1))
+    t_cos=[]
+    for i in range(len(pred_forces)):
+        p_unit=pred_forces[i]/np.linalg.norm(pred_forces[i])
+        gt_unit=gt_forces[i]/np.linalg.norm(gt_forces[i])
+                                             
+        t_cos.append(np.abs(scipy.spatial.distance.cosine(gt_unit,p_unit)))
+    return t_mag,t_cos
+
 def mixed_dataset(s_list,model_name):
+    TRAINING=False
+    TEST=True
+
     # load data:
     tf.reset_default_graph()
 
@@ -26,22 +42,28 @@ def mixed_dataset(s_list,model_name):
     print '****Loading dataset, this will take a while...'
     for suffix in s_list:
         DATA_FOLDER='../tf_dataset/'+suffix+'/'
-        train_pickle=DATA_FOLDER+'train'
-        test_pickle=DATA_FOLDER+'test'
-        validation_pickle=DATA_FOLDER+'eval'
-        train_contact_data=ForceDataReader(train_pickle,VOXEL=True)
-        valid_contact_data=ForceDataReader(validation_pickle,VOXEL=True)
-        test_contact_data=ForceDataReader(test_pickle,VOXEL=True)
-        train_dataset.extend(train_contact_data.dataset)
-        test_dataset.extend(test_contact_data.dataset)
-        val_dataset.extend(valid_contact_data.dataset)
-    train_contact_data.dataset=train_dataset
-    test_contact_data.dataset=test_dataset
-    valid_contact_data.dataset=val_dataset
-    print ('****loaded full dataset..')
-    print 'train', len(train_contact_data.dataset)
-    print 'valid', len(valid_contact_data.dataset)
-    print 'test', len(test_contact_data.dataset)
+        if(TRAINING):
+            train_pickle=DATA_FOLDER+'train'
+            validation_pickle=DATA_FOLDER+'eval'
+            train_contact_data=ForceDataReader(train_pickle,VOXEL=True)
+            valid_contact_data=ForceDataReader(validation_pickle,VOXEL=True)
+            train_dataset.extend(train_contact_data.dataset)
+            val_dataset.extend(valid_contact_data.dataset)
+
+        if(TEST):
+            test_pickle=DATA_FOLDER+'test'
+            test_contact_data=ForceDataReader(test_pickle,VOXEL=True)
+            test_dataset.extend(test_contact_data.dataset)
+
+    if(TRAINING):
+        train_contact_data.dataset=train_dataset
+        valid_contact_data.dataset=val_dataset
+        print 'train', len(train_contact_data.dataset)
+        print 'valid', len(valid_contact_data.dataset)
+
+    if(TEST):
+        test_contact_data.dataset=test_dataset
+        print 'test', len(test_contact_data.dataset)
 
     #print 'Visualizing voxel cpt data'
 
@@ -51,8 +73,8 @@ def mixed_dataset(s_list,model_name):
     config=tf.ConfigProto(log_device_placement=False)
     config.gpu_options.allow_growth = True
 
-    input_size,out_size=train_contact_data.get_dims()
-
+    #input_size,out_size=train_contact_data.get_dims()
+    
     iteration = 0
     # logging and model saving paths
     logs_path='../tf_session_logs/'+model_name+'/momentum/'
@@ -64,24 +86,22 @@ def mixed_dataset(s_list,model_name):
     if not path.exists(checkpoint_dir):
         makedirs(checkpoint_dir)
 
-    # hyper parameters:
-    validate_epoch=10
-    learning_rate=1e-4
-    lr_epoch=5*len(train_contact_data.dataset)/batch_size
-    epoch_iter=len(train_contact_data.dataset)/batch_size
+    if(TRAINING):
+        # hyper parameters:
+        validate_epoch=10
+        learning_rate=1e-4
+        lr_epoch=5*len(train_contact_data.dataset)/batch_size
+        epoch_iter=len(train_contact_data.dataset)/batch_size
 
-    max_iter=max_epochs*len(train_contact_data.dataset)/batch_size
-    save_iter=2*len(train_contact_data.dataset)/batch_size
+        max_iter=max_epochs*len(train_contact_data.dataset)/batch_size
+        save_iter=2*len(train_contact_data.dataset)/batch_size
 
     
-    # 
-    TRAINING=True
-    TEST=True
+
+        # minumum accuracy is initialized to a high value
+        min_acc=10000.0
     
-    # minumum accuracy is initialized to a high value
-    min_acc=10000.0
-    
-    print "***Training...."
+    print "***Running...."
     with tf.Session(config=config) as sess:
         # create model instance:
         dyn_trainer=ScaledForceNet(sess,batch_size,t_steps)
@@ -93,17 +113,18 @@ def mixed_dataset(s_list,model_name):
         summary_writer=tf.summary.FileWriter(logs_path)
         summary_writer.add_graph(sess.graph)
         saver = tf.train.Saver(max_to_keep=0)
-        
-        # load eval and test set:
-        val_vox,val_cpt_vox, val_elect, val_pac, val_pdc, val_tdc, val_tac, val_bt_pose,val_cpt,val_sn, val_flag,val_force = valid_contact_data.get_voxel_random_batch(t_batch_size,t_steps)
-        #print val_sn
-        val_vox=np.expand_dims(val_vox,axis=-1)
-        val_cpt_vox=np.expand_dims(val_cpt_vox,axis=-1)
 
-        # Accuracy :
-        # validation evaluation:
-        acc,acc_summary=dyn_trainer.get_accuracy(val_vox, val_cpt_vox, val_elect,val_pac,val_pdc,val_tdc,val_tac,val_bt_pose,val_cpt,val_sn,val_flag,val_force)
-        print ('*****Pretraining Validation Set Loss',acc)
+        if(TRAINING):
+            # load eval and test set:
+            val_vox,val_cpt_vox, val_elect, val_pac, val_pdc, val_tdc, val_tac, val_bt_pose,val_cpt,val_sn, val_flag,val_force = valid_contact_data.get_voxel_random_batch(t_batch_size,t_steps)
+            #print val_sn
+            val_vox=np.expand_dims(val_vox,axis=-1)
+            val_cpt_vox=np.expand_dims(val_cpt_vox,axis=-1)
+            
+            # Accuracy :
+            # validation evaluation:
+            acc,acc_summary=dyn_trainer.get_accuracy(val_vox, val_cpt_vox, val_elect,val_pac,val_pdc,val_tdc,val_tac,val_bt_pose,val_cpt,val_sn,val_flag,val_force)
+            print ('*****Pretraining Validation Set Loss',acc)
         while TRAINING:
             # get random batch
             vox_elect,vox_cpt, in_elect, in_pac,in_pdc,in_tdc,in_tac,in_bt_pose,in_cpt,in_sn,proj_flag,out_force=train_contact_data.get_voxel_random_batch(batch_size,t_steps)
@@ -151,17 +172,28 @@ def mixed_dataset(s_list,model_name):
             test_vox=np.expand_dims(test_vox,axis=-1)
             test_cpt_vox=np.expand_dims(test_cpt_vox,axis=-1)
 
-            acc,summ=dyn_trainer.get_accuracy(test_vox,test_cpt_vox,test_elect,test_pac,test_pdc,test_tdc,test_tac,test_bt_pose,test_cpt, test_sn,test_flag,test_force)
+            acc,summ = dyn_trainer.get_accuracy(test_vox,test_cpt_vox,test_elect,test_pac,test_pdc,test_tdc,test_tac,test_bt_pose,test_cpt, test_sn,test_flag,test_force)
+            pred_force,_ = dyn_trainer.predict(test_vox,test_cpt_vox,test_elect,test_pac,test_pdc,test_tdc,test_tac,test_bt_pose,test_cpt, test_sn,test_flag,test_force)
+        
+            t_mag,t_cos=compute_error(pred_force,test_force)
+            
             print ('Test Set Loss: ',acc)
 
+            print ('Test Set Errors: ')
+
+            
+            print ('Median Magnitude Error(N): ',np.median(t_mag))
+            print ('Median Cosine distance (deg): ',np.median(t_cos)*180.0/np.pi)
+
 if __name__=='__main__':
-    s_list=['icra19/planar_pushing','icra19/rigid_ft','icra19/ball_ft']#,'ll4malab']
+    s_list=['icra19/planar_pushing','icra19/rigid_ft','icra19/ball_ft','ll4malab']
     # create new model name:
     now = datetime.datetime.now()
-    
+
+    # available pre-trained models: icra19, ll4ma_lab
     model_name='force_'+str(now.year)+'_'+str(now.month)+'_'+str(now.day)
     print '*******Training new model with model name:', model_name
     mixed_dataset(s_list,model_name)
 
-    print '**** Training Completed, Update the model_name in force_inference.py to use the new model'
+    print '**** Training Completed, Update the model_name in force_inference.py to use the new model ', model_name
     
