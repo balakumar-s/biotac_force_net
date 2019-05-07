@@ -150,7 +150,7 @@ class ScaledForceNet(SensorRegressionNet):
         
         exp_tensor=tf.ones(tf.shape(gt_force)[0]) * 2.0
         weight=tf.pow( exp_tensor , (1.0-(tf.acos(tf.reduce_sum(tf.multiply(self.input_sn,gt_unit),axis=1))/math.pi))*10.0)
-        magnitude_scale=tf.norm(self.output_vector,axis=1)
+        magnitude_scale=tf.norm(self.output_vector,axis=1) 
         # force cost in 3d:
         
         

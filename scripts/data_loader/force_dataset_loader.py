@@ -165,7 +165,7 @@ class ForceDataReader(object):
 
             inp_cpt_voxel.append(self.get_voxel_cpt(self.bt_fns.get_contact_pt(self.dataset[f_idx]['tare_bt_electrode'])))
 
-            inp_sn.append(np.ravel(self.dataset[f_idx]['bt_surface_normal']))
+            inp_sn.append(np.ravel(self.bt_fns.get_surface_normal(inp_cpt[-1])))
             proj_flag.append(bool(self.dataset[f_idx]['projection']))
             
             out_force.append(np.ravel(self.dataset[f_idx]['sim_force']))
@@ -210,8 +210,9 @@ class ForceDataReader(object):
 
             
             proj_flag.append(bool(0))
+            inp_sn.append(np.ravel(self.bt_fns.get_surface_normal(inp_cpt[-1])))
 
-            inp_sn.append(np.ravel(self.dataset[f_idx]['bt_surface_normal']))
+            #inp_sn.append(np.ravel(self.dataset[f_idx]['bt_surface_normal']))
             
 
             out_force.append(np.ravel(self.dataset[f_idx]['sim_force']))
@@ -245,7 +246,7 @@ class ForceDataReader(object):
             #inp_cpt.append(np.ravel(self.dataset[f_idx]['b_contact']))
             proj_flag.append(bool(self.dataset[f_idx]['projection']))
 
-            inp_sn.append(np.ravel(self.dataset[f_idx]['bt_surface_normal']))
+            #inp_sn.append(np.ravel(self.dataset[f_idx]['bt_surface_normal']))
 
             inp_cpt.append(
                             np.ravel(self.bt_fns.get_contact_pt(self.dataset[f_idx]['tare_bt_electrode'])))
@@ -253,6 +254,7 @@ class ForceDataReader(object):
             inp_cpt_voxel.append(
                 self.get_voxel_cpt(self.bt_fns.get_contact_pt(self.dataset[f_idx]['tare_bt_electrode'])))
 
+            inp_sn.append(np.ravel(self.bt_fns.get_surface_normal(inp_cpt[-1])))
 
             out_force.append(np.ravel(self.dataset[f_idx]['sim_force']))
         return inp_voxel,inp_cpt_voxel, np.matrix(inp_bt_elect), np.matrix(inp_bt_pac), np.matrix(inp_bt_pdc), np.matrix(inp_bt_tdc), np.matrix(inp_bt_tac), np.matrix(inp_bt_pose), np.matrix(inp_cpt), np.matrix(inp_sn),proj_flag, np.matrix(out_force)

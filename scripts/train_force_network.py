@@ -30,7 +30,7 @@ def compute_error(pred_forces,gt_forces):
     return t_mag,t_cos
 
 def mixed_dataset(s_list,model_name):
-    TRAINING=False
+    TRAINING=True
     TEST=True
 
     # load data:

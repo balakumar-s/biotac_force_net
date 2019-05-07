@@ -14,7 +14,7 @@
 
 import rospy
 from visualization_msgs.msg import Marker
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point,WrenchStamped
 from biotac_sensors.msg import *
 from data_loader.biotac_process import *
 from data_loader.force_dataset_loader import *
@@ -80,7 +80,7 @@ class voxelViz(object):
         self.f_aux=ForceDataReader(pickle_file='',VOXEL=True,LOAD_DATASET=False)
         self.el_pub = rospy.Publisher('/biotac/voxel_electrode', Marker, queue_size=1)
         self.cpt_pub = rospy.Publisher('/biotac/voxel_cpt', Marker, queue_size=1)
-
+        self.sn_pub = rospy.Publisher('/biotac/surface_normal',WrenchStamped,queue_size=1)
     def get_voxel_el(self,bt_data):
         el_data=bt_data[self.bt_idx].electrode_data
         voxel=self.f_aux.get_voxel_electrode(el_data)
@@ -95,7 +95,18 @@ class voxelViz(object):
         cpt_vox=self.f_aux.get_voxel_cpt(cpt)
         return cpt_vox
         #print cpt_vox.shape
-
+    def get_sn(self,bt_data):
+        cpt=self.bt_fns.get_contact_pt(np.array(bt_data[self.bt_idx].electrode_data))
+        sn=self.bt_fns.get_surface_normal(cpt)
+        return sn
+    def pub_sn(self,sn):
+        # publish surface normal
+        s_vec=WrenchStamped()
+        s_vec.header.frame_id = "/index_tip_cpt"
+        s_vec.wrench.force.x=sn[0]
+        s_vec.wrench.force.y=sn[1]
+        s_vec.wrench.force.z=sn[2]
+        self.sn_pub.publish(s_vec)
     def pub_voxel_el(self,voxel_mat):
         marker = Marker()
         marker.header.frame_id = "/index_biotac_origin"
@@ -192,4 +203,6 @@ if __name__=='__main__':
         v_cpt=vox_viz.get_voxel_cpt(bt_data)
         vox_viz.pub_voxel_cpt(v_cpt)
         vox_viz.pub_voxel_el(v_el)
+        sn=vox_viz.get_sn(bt_data)
+        vox_viz.pub_sn(sn)
         loop_rate.sleep()
