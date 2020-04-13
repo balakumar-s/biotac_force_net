@@ -1,34 +1,41 @@
+import tf as rostf
 import tensorflow as tf
-import tf as ros_tf
 import sys
 from data_loader.force_dataset_loader import *
-from models.ICRA19 import *
-
+from models.multiDropoutModel import *
 import numpy as np
-from geometry_msgs.msg import WrenchStamped,PoseStamped
+from geometry_msgs.msg import WrenchStamped
 import rospy
 from biotac_sensors.msg import *
 from std_msgs.msg import Int16
 from data_loader.biotac_process import *
 from std_msgs.msg import Int16MultiArray
 
+# set below flag to false if biotac contact point is already being published!
+PUBLISH_CPT_TF=True
+
 class tfInference(object):
     def __init__(self,model_dir):
         # tf config:
-        config=tf.ConfigProto(log_device_placement=True)
+        config=tf.ConfigProto(log_device_placement=False)
         config.gpu_options.allow_growth = True
 
         # load model:
         self.meta_file=model_dir+'model.ckpt.meta'
         print self.meta_file
         self.sess=tf.Session(config=config)
+        print 'creating session..'
+        self.dyn_trainer=ScaledForceNet(self.sess,1,1, keep_prob=0.7,n_dropout=10)
+        print 'restoring checkpoint..'
 
-        self.dyn_trainer=ScaledForceNet(self.sess,1,1)
         saver=tf.train.Saver()
         saver.restore(self.sess,model_dir+'model.ckpt')
+        
+        print 'tf ready!!'
         # load force reader for auxillary functions
         self.f_aux=ForceDataReader(pickle_file='',VOXEL=True,LOAD_DATASET=False)
         self.finger_filters=[]
+
         '''
         for f in range(4):
             self.signal_filt=[]
@@ -36,18 +43,20 @@ class tfInference(object):
                 self.signal_filt.append(AlphaBetaFilter())
         self.finger_filters.append(self.signal_filt)
         '''
+    '''
     def get_prediction(self,in_elect,in_pac,in_pdc,in_tac,in_tdc,out_sig):
         if(np.sum(in_pdc)>10):
             # get voxelized electrode value
             voxel=self.f_aux.get_voxel_electrode(in_elect)
             voxel=[np.expand_dims(voxel,axis=-1)]
-            pred_force,_=self.dyn_trainer.predict(voxel,in_elect,in_pac,in_pdc,in_tdc,in_tac,out_sig)
+            pred_force,pred_acc=self.dyn_trainer.get_conf_predict(voxel,in_elect,in_pac,in_pdc,in_tdc,in_tac,out_sig)
             #print pred_force
-            return pred_force[0]
+            return pred_force
         else:
-            return np.zeros(3)
-        
-    def get_multiple_prediction(self,in_elect,in_pac,in_pdc,in_tac,in_tdc,in_bt_pose,in_cpt,in_sn,in_flags,out_sig):
+            return np.zeros(3),np.zeros(3)
+    '''
+    def get_multiple_prediction(self, in_elect, in_pac, in_pdc, in_tac, in_tdc, in_bt_pose, in_cpt,
+                                in_sn, in_flags, out_sig):
         # get voxel data
         voxel=[]
         voxel_cpt=[]
@@ -56,17 +65,8 @@ class tfInference(object):
             voxel_cpt.append(np.expand_dims(self.f_aux.get_voxel_cpt(np.ravel(in_cpt[i,:])),-1))
 
         # get voxelized electrode value
-        pred_force,pred_acc=self.dyn_trainer.predict(voxel,voxel_cpt,in_elect,in_pac,in_pdc,in_tdc,in_tac,in_bt_pose,in_cpt, in_sn, in_flags,out_sig)
-        '''
-        
-        for i in range(len(in_elect)):
-            #print in_pdc[i]
-            #for k in range(len(pred_force[i])):   
-            #    self.finger_filters[i][k].filter(pred_force[i,k])
-            #    pred_force[i,k]=self.finger_filters[i][k].x
-            if(np.sum(in_pdc[i])<10):
-                pred_force[i,:]=np.zeros(3)
-        '''
+        pred_force, pred_acc=self.dyn_trainer.predict(voxel, voxel_cpt, in_elect, in_pac,in_pdc, in_tdc,in_tac,
+                                                      in_bt_pose,in_cpt, in_sn, in_flags,out_sig)
         return pred_force,pred_acc
         
 class biotacSensor(object):
@@ -170,9 +170,9 @@ class biotacSensor(object):
 
         return self.elect,self.pac,self.pdc,self.tdc,self.tac
 if __name__=='__main__':
-
-    suffix='icra19'
-   
+    
+    #suffix='ll4ma_lab'
+    suffix='ll4ma_lab_dropout'
     checkpoint_dir = '../tf_models/'+suffix+'/momentum/checkpoints/'
 
     t_steps=1
@@ -184,24 +184,25 @@ if __name__=='__main__':
     in_pdc=np.zeros((1,t_steps))
     in_tdc=np.zeros((1,t_steps))
     '''
-    
+
+    print 'hi'
     tf_infer=tfInference(checkpoint_dir)
-    finger_origins= ['index_biotac_origin',
-                     'middle_biotac_origin','ring_biotac_origin','thumb_biotac_origin']
+    print 'initialized ref'
     finger_frames=['index_tip_cpt','middle_tip_cpt','ring_tip_cpt','thumb_tip_cpt']
+    finger_base_frames=['index_biotac_origin','middle_biotac_origin','ring_biotac_origin','thumb_biotac_origin']
     rospy.init_node('force_inference_node')
     bt_sense=biotacSensor(False)
-    out_sig=np.zeros((3,1))
     in_elect,in_pac,in_pdc,in_tdc,in_tac,in_bt_pose,in_cpt,in_sn,in_flags=bt_sense.get_data()
     bt_force_pub=rospy.Publisher('TacNet/bt_force',BioTacForce,queue_size=1)
     force_pubs=[]
+    br = rostf.TransformBroadcaster()
     for i in range(len(finger_frames)):
         force_pubs.append(rospy.Publisher('TacNet/'+finger_frames[i]+'/force',WrenchStamped,queue_size=1))
-
-    br = ros_tf.TransformBroadcaster()
-
     while (not rospy.is_shutdown()):
+        #print 'run'
         if(bt_sense.got_biotac_data):
+            out_sig=np.zeros((bt_sense.num_sensors,3))
+
             #print 'bt data'
             msg=Int16()
             #in_elect,in_pac,in_pdc,in_tdc,in_tac=bt_sense.get_tstep_data(0)
@@ -220,7 +221,9 @@ if __name__=='__main__':
             bt_pose=np.matrix(in_bt_pose)
             sn=np.matrix(in_sn)
             cpt=np.matrix(in_cpt)
-            bt_force, bt_acc = tf_infer.get_multiple_prediction(el, pac,pdc,tdc,tac,bt_pose,cpt,sn,in_flags,out_sig)
+            bt_force,bt_acc=tf_infer.get_multiple_prediction(el,pac,pdc,tdc,tac,bt_pose,cpt,sn,in_flags,out_sig)
+            #print 'Accuracy'
+            #print bt_acc
             bt_msg=BioTacForce()
             ros_time=rospy.Time.now()
                         
@@ -229,7 +232,6 @@ if __name__=='__main__':
                     bt_force[i,:]=0
             for i in range(len(bt_sense.sensor_idx)):
                 force_msg=WrenchStamped()
-                cpt_msg=PoseStamped()
                 try:
                     f_idx=bt_sense.sensor_idx[i]
                 except:
@@ -242,20 +244,16 @@ if __name__=='__main__':
                 force_msg.wrench.torque.x=bt_acc[i,0]
                 force_msg.wrench.torque.y=bt_acc[i,1]
                 force_msg.wrench.torque.z=bt_acc[i,2]
-
-                cpt_msg.pose.position.x=in_cpt[i][0]
-                cpt_msg.pose.position.y=in_cpt[i][1]
-                cpt_msg.pose.position.z=in_cpt[i][2]
-                
+                            
                 force_pubs[f_idx].publish(force_msg)
                 bt_msg.forces.append(force_msg)
-                bt_msg.contact_pts.append(cpt_msg)
-                # publish contact point tf frame:
-                br.sendTransform((in_cpt[i][0],in_cpt[i][1], in_cpt[i][2]),
-                                 ros_tf.transformations.quaternion_from_euler(0,0,0),
-                                 rospy.Time.now(),
-                                 finger_frames[f_idx],
-                                 finger_origins[f_idx])
+                # publish tf:
+                if(PUBLISH_CPT_TF):
+                    br.sendTransform((in_cpt[i][0], in_cpt[i][1], in_cpt[i][2]),
+                                     rostf.transformations.quaternion_from_euler(0, 0, 0),
+                                     rospy.Time.now(),
+                                     finger_frames[f_idx],
+                                     finger_base_frames[f_idx])
 
                 
             bt_force_pub.publish(bt_msg)

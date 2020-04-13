@@ -1,5 +1,13 @@
 # Biotac Force Estimation using Neural Networks
 
+## Updated Force Estimation Model with Confidence output [April 2020]:
+Using multi-sample dropout, we were able to get better accuracy and also get a confidence measure on the estimated force. Follow the instructions below but replace,
+
+- python force\_inference.py -> python conf\_force\_inference.py
+
+- train\_force\_network.py -> train\_dropout\_force\_network.py
+
+The confidence measure is output as torque.x, torque.y, torque.z of the WrenchStamped msg.
 
 ## How to run force estimation
 
@@ -40,7 +48,7 @@ If the force estimation from the network is not sufficiently accurate for your b
 
 ## Citing
 
-This code was developed as part of the following publication. Please cite the below publication, if you use our source code.
+This code was developed as part of the following publications. If you use our source code, please cite the below publications,
 
 *Sundaralingam, B., Lambert, A., Handa, A., Boots, B., Hermans, T., Birchfield, S., Ratliff, N. and Fox, D., 2019. Robust learning of tactile force estimation through robot interaction. In 2019 IEEE International Conference on Robotics and Automation (ICRA).*
 
@@ -52,4 +60,21 @@ This code was developed as part of the following publication. Please cite the be
     YEAR      = 2019,
     location={{Montreal,Canada}}
     }
+```
+
+If you are using the multi-sample dropout version (confidence output), cite also the below preprint:
+
+*Sundaralingam, B. and Hermans, T., 2020. In-Hand Object-Dynamics Inference using Tactile Fingertips.  CoRR abs/2003.13165*
+
+```
+@article{bala-inhanddynamics2020,
+  author    = {Balakumar Sundaralingam and Tucker Hermans},
+  title     = {In-Hand Object-Dynamics Inference using Tactile Fingertips},
+  journal   = {CoRR},
+  volume    = {abs/2003.13165},
+  year      = {2020},
+  url       = {https://arxiv.org/abs/2003.13165},
+  archivePrefix = {arXiv},
+  eprint    = {2003.13165}
+}
 ```

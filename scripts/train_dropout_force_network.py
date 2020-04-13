@@ -1,7 +1,8 @@
 import sys
 
 from data_loader.force_dataset_loader import *
-from models.ICRA19 import *
+#from models.ICRA19 import *
+from models.multiDropoutModel import *
 
 import numpy as np
 from os import path, makedirs
@@ -107,7 +108,8 @@ def mixed_dataset(s_list,model_name):
     print "***Running...."
     with tf.Session(config=config) as sess:
         # create model instance:
-        dyn_trainer=ScaledForceNet(sess,batch_size,t_steps)
+        #dyn_trainer=ScaledForceNet(sess,batch_size,t_steps)
+        dyn_trainer=ScaledForceNet(sess,batch_size,t_steps,keep_prob=0.7,n_dropout=10)        
         # initialize variables:
         sess.run(tf.global_variables_initializer())
         
@@ -187,7 +189,7 @@ def mixed_dataset(s_list,model_name):
                 #print ('Test Set '+str(i)+' Loss: ',acc)
                 
             print ('Test Set Errors: ')
-            #print ('Test Set variance: ',np.median(pred_force_var,axis=0))
+            print ('Test Set variance: ',np.median(pred_force_var,axis=0))
             
             print ('Median Magnitude Error(N): ',np.median(mag_arr))
             print ('Median Cosine distance (deg): ',np.median(cos_arr)*180.0/np.pi)
@@ -203,8 +205,10 @@ if __name__=='__main__':
     # create new model name:
     now = datetime.datetime.now()
 
-    # available pre-trained models: icra19, ll4ma_lab
+    # available pre-trained models: ll4ma_lab_dropout
     model_name='force_'+str(now.year)+'_'+str(now.month)+'_'+str(now.day)
+
+    #model_name='model_name'
     print '*******Training new model with model name:', model_name
     mixed_dataset(s_list,model_name)
 

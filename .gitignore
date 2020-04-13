@@ -3,6 +3,9 @@
 *.lo
 *.o
 
+# any plotting scripts
+*plot*
+
 # Compiled Dynamic libraries
 #!*.so 		#override exclusion in ~/.gitignore_global
 *.dylib  
